@@ -24,7 +24,7 @@ def format_validation_error(error: ValidationError):
     inputs = collections.defaultdict(set)
     for e in error.errors():
         if e["type"] == "elevation_required_but_not_provided":
-            return {e["msg"]: e.get("loc") + e.get("ctx").get("loc")}
+            return {e["msg"]: list(e.get("loc")) + e.get("ctx").get("loc")}
         # If it's a union type, then it generates multiple errors for the same input arguments.
         # Here we collect only the common paths. For example,
         # [( input_arguments, url_parsing),(input_arguments, string_mismatch)] => (input_arguments)
@@ -59,7 +59,7 @@ class Validator:
     def validate_atomic(self, file: DirEntry):
         """Validates whether the defined input args are used."""
         with open(file.path, "r") as f:
-            atomic = yaml.load(f)
+            atomic = yaml.load(f) or {}
             technique = Technique(**atomic)
             for index, t in enumerate(technique.atomic_tests):
                 if t.auto_generated_guid:
@@ -92,6 +92,7 @@ class Validator:
                             "Rename file from .yml to .yaml",
                         ),
                         loc=["filename"],
+                        input=None,
                     )
                 ],
             )
@@ -112,6 +113,7 @@ class Validator:
                             "Invalid path. `src` and `bin` are the only two directories supported.",
                         ),
                         loc=["directory"],
+                        input=None,
                     )
                 ],
             )
